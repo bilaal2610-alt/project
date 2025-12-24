@@ -70,11 +70,27 @@ jobs:
             echo "ERROR: Pages not reachable after retries"
             exit 1
           fi
-      - name: Verify content on homepage
+
+      - name: Verify multiple pages content
         run: |
           URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
-          echo "Fetching $URL"
-          content=$(curl -fsS "$URL")
-          echo "$content" | grep -q "RF ASSOCIATES" || (echo "Expected content not found" ; exit 1)
-          echo "Smoke-test passed: content found"
+          echo "Checking multiple routes on $URL"
+          routes=("/" "/about" "/projects" "/services" "/contact")
+          checks=("RF ASSOCIATES" "About RF ASSOCIATES" "Featured Projects" "Our Core Services" "Contact")
+          for idx in "${!routes[@]}"; do
+            ROUTE="${routes[$idx]}"
+            EXPECT="${checks[$idx]}"
+            FULL="$URL$ROUTE"
+            echo "Checking $FULL"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FULL") || STATUS=000
+            if [ "$STATUS" != "200" ]; then
+              echo "ERROR: $FULL returned status $STATUS"
+              exit 1
+            fi
+            content=$(curl -fsS "$FULL")
+            echo "$content" | grep -q "$EXPECT" || (echo "ERROR: expected '$EXPECT' not found on $FULL" ; exit 1)
+            echo "OK: $FULL contains expected content"
+            sleep 1
+          done
+          echo "Smoke-tests passed for all routes"
 
