@@ -37,21 +37,12 @@ jobs:
           # Allow Puppeteer to download Chromium (default behavior) if needed
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'false'
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v3
-
-      - name: Upload prerendered artifact
-        uses: actions/upload-pages-artifact@v1
+      - name: Deploy to gh-pages branch (via peaceiris)
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: prerendered
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./prerendered
+          publish_branch: gh-pages
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+# Note: using peaceiris/actions-gh-pages avoids deprecated internal dependencies and
+# pushes the generated `prerendered/` folder to the `gh-pages` branch for Pages hosting.
