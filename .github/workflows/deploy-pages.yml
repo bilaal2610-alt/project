@@ -46,3 +46,35 @@ jobs:
 
 # Note: using peaceiris/actions-gh-pages avoids deprecated internal dependencies and
 # pushes the generated `prerendered/` folder to the `gh-pages` branch for Pages hosting.
+
+  smoke-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for GitHub Pages to become available
+        run: |
+          set -e
+          URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "Checking $URL"
+          STATUS=000
+          for i in {1..12}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" ) || STATUS=000
+            if [ "$STATUS" = "200" ]; then
+              echo "Pages reachable"
+              break
+            fi
+            echo "Attempt $i: status=$STATUS"
+            sleep 10
+          done
+          if [ "$STATUS" != "200" ]; then
+            echo "ERROR: Pages not reachable after retries"
+            exit 1
+          fi
+      - name: Verify content on homepage
+        run: |
+          URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+          echo "Fetching $URL"
+          content=$(curl -fsS "$URL")
+          echo "$content" | grep -q "RF ASSOCIATES" || (echo "Expected content not found" ; exit 1)
+          echo "Smoke-test passed: content found"
+
