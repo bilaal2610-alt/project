@@ -43,12 +43,21 @@ const server = http.createServer((req, res) => {
     if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
     const filePath = path.join(root, reqPath);
     if (!filePath.startsWith(root)) return (res.statusCode = 403, res.end('Forbidden'));
+
+    // Serve the requested file when present; otherwise fall back to index.html
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       res.setHeader('Content-Type', contentType(filePath));
       fs.createReadStream(filePath).pipe(res);
     } else {
-      res.statusCode = 404;
-      res.end('Not found');
+      // Fallback to SPA index so client-side routing can render pages for prerender
+      const indexFile = path.join(root, 'index.html');
+      if (fs.existsSync(indexFile)) {
+        res.setHeader('Content-Type', contentType(indexFile));
+        fs.createReadStream(indexFile).pipe(res);
+      } else {
+        res.statusCode = 404;
+        res.end('Not found');
+      }
     }
   } catch (err) {
     res.statusCode = 500;
@@ -81,14 +90,15 @@ async function prerender() {
   for (const r of routes) {
     const url = `http://localhost:${PORT}${r.url}`;
     console.log('Loading', url);
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    // Increase timeouts to allow client-side rendering to complete on slower environments
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Wait for the root to render
+    // Wait for the root to render (longer timeout)
     try {
       await page.waitForFunction(() => {
         const root = document.querySelector('#root');
         return root && root.innerHTML.trim().length > 0;
-      }, { timeout: 10000 });
+      }, { timeout: 20000 });
     } catch (e) {
       console.warn('Timed out waiting for #root content; continuing anyway');
     }
