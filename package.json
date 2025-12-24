@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "export": "node ./scripts/export-dist.js",
-    "prerender": "node ./scripts/prerender.js"
+    "prerender": "node ./scripts/prerender.js",
+    "serve-prerendered": "node ./scripts/serve-prerendered.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
