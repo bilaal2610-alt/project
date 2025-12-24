@@ -76,11 +76,11 @@ async function prerender() {
   const page = await browser.newPage();
 
   const routes = [
-    { url: '/index.html', out: 'index.html' },
-    { url: '/about.html', out: 'about.html' },
-    { url: '/projects.html', out: 'projects.html' },
-    { url: '/services.html', out: 'services.html' },
-    { url: '/contact.html', out: 'contact.html' },
+    { url: '/', out: 'index.html' },
+    { url: '/about', out: 'about.html' },
+    { url: '/projects', out: 'projects.html' },
+    { url: '/services', out: 'services.html' },
+    { url: '/contact', out: 'contact.html' },
   ];
 
   // ensure output folder
